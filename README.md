@@ -127,3 +127,42 @@ stylua --check lua plugin tests
 ```
 
 测试使用隔离的临时目录。包含真实原生会话往返、布局/视图、脏缓冲区保护、钩子、损坏记录隔离，以及真实 PTY 下的输入、搜索、缩放、恢复、取消和跨进程启动/退出。存在相邻 `selection-tools.nvim` 时额外验证其真实 picker。
+
+## Python 项目环境
+
+`require('workspace_tools.environments.python').setup({})` 独立启用环境选择，
+无需启动 workspace 会话保存。`:WorkspacePython` 打开选择器，优先使用
+selection-tools，缺少时回退到 `vim.ui.select`。`:WorkspacePython /path/to/.venv`
+或 Python 可执行文件可直接选择；`:WorkspacePython!` 清除覆盖，恢复自动发现；
+`:WorkspacePython system` 使用 PATH 中的 Python。
+
+```lua
+local python = require('workspace_tools.environments.python')
+python.setup({
+  -- search_paths = { '~/.virtualenvs', '~/.pyenv/versions' },
+  -- directory = vim.fn.stdpath('state') .. '/workspace-tools/python',
+  -- search_depth = 3, max_directories = 3000,
+})
+local executable = python.current({ buf = 0 }) -- 无项目环境时返回 nil，调用方处理系统回退
+local env = python.environment({ buf = 0 }) -- 传给子进程的 PATH / VIRTUAL_ENV / CONDA_PREFIX
+python.set('/project/.venv', { root = '/project' })
+-- python.set(nil, { root = '/project' })
+```
+
+项目根由 Python 项目标记或 `.git` 确定，选择按规范化后的根目录分别持久化到
+私有 JSON 文件。自动发现优先项目 `.venv`、`venv`、`env`，然后使用继承的
+VIRTUAL_ENV / CONDA_PREFIX。显式选择优先于自动发现；失效选择及损坏缓存回退，
+不会阻止打开文件。系统选择遵循当前 PATH。
+
+选择器分批扫描常见 virtualenv、Poetry、pyenv、Conda 环境目录和
+`~/.conda/environments.txt`；不进入已发现环境的依赖目录，不执行项目脚本，
+不会创建或安装环境。达到深度/目录数量限制会在选择器标题提示，可手动输入路径。
+`discover(opts, callback)` 返回带 `cancel()` 的句柄，`disable()` 取消待完成的发现。
+
+环境切换发出 `User WorkspacePythonChanged`，`ev.data` 包含 `root`、`python`
+和 `environment`。语言服务器、任务和 DAP 通过这个接口集成；插件不会改写编辑器
+全局 PATH，也不会修改其他项目。Python 可执行文件保留 venv 内的符号链接路径。
+不包含 Poetry/Conda 安装管理、shell 激活脚本或 PEP 723 临时环境创建。
+
+测试：`sh tests/run.sh` 包含 Python 环境发现、项目隔离、缓存权限与失效、选择取消、
+子进程环境以及解释器符号链接检查。
