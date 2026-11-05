@@ -40,6 +40,44 @@ local function must(entry, err)
   assert(entry, err)
   return entry
 end
+local function notification(command)
+  local notifications, notify = {}, vim.notify
+  vim.notify = function(message, level, opts)
+    notifications[#notifications + 1] = { message = message, level = level, opts = opts }
+  end
+  local ok, err = pcall(vim.cmd, command)
+  vim.notify = notify
+  assert(ok, err)
+  assert(#notifications == 1, 'expected one notification for ' .. command)
+  return notifications[1]
+end
+
+-- Missing records are actionable warnings without Lua source paths or line numbers.
+for _, command in ipairs({
+  'WorkspaceRestore',
+  'WorkspaceRestore missing name',
+  'WorkspaceDelete',
+  'WorkspaceDelete! missing name',
+  'WorkspaceLast',
+}) do
+  local result = notification(command)
+  assert(result.level == vim.log.levels.WARN, command .. ' should warn')
+  assert(result.opts.title == 'workspace-tools' and result.opts.markdown == true)
+  assert(not result.message:find('workspace-tools:', 1, true), 'plugin name repeated in body')
+  assert(result.message:find('No saved workspace', 1, true))
+  assert(result.message:find(':Workspace', 1, true), 'missing action hint')
+  assert(not result.message:find('.lua:', 1, true), 'Lua source location leaked')
+  if command ~= 'WorkspaceLast' then
+    assert(result.message:find(require('workspace_tools.notify').code(a), 1, true), 'missing highlighted directory')
+  end
+  if command:find('missing name', 1, true) then
+    assert(result.message:find('missing name', 1, true), 'missing workspace name')
+  end
+end
+assert(notification('WorkspaceRestore').message:find('`:WorkspaceSave`', 1, true), 'command should use Markdown code')
+local absent, message, level = workspace.restore({ id = store.id(a, 'deleted') })
+assert(not absent and level == vim.log.levels.WARN and message:find('with ID', 1, true))
+
 vim.cmd.edit(vim.fn.fnameescape(a .. '/one.txt'))
 vim.wo.foldmethod = 'manual'
 vim.cmd('2,4fold')
@@ -162,6 +200,7 @@ local broken = {
   session = 'this is invalid vimscript\n',
 }
 store.write(broken)
+assert(notification('WorkspaceRestore broken').level == vim.log.levels.ERROR, 'invalid sessions must still error')
 entry, err = workspace.restore(broken.id)
 assert(not entry and err and workspace.status().blocked)
 assert(vim.g.SessionLoad == nil)

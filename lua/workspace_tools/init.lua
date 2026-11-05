@@ -2,6 +2,7 @@ local M = {}
 local config = require('workspace_tools.config')
 local store = require('workspace_tools.store')
 local session = require('workspace_tools.session')
+local notify = require('workspace_tools.notify')
 local state = { initialized = false, busy = false, blocked = false, stopped = false, active = nil, explicit = false }
 
 local function now()
@@ -32,6 +33,9 @@ local function operation(callback, restoring)
     if restoring then
       state.blocked = true
     end
+    if type(value) == 'table' and value.level == vim.log.levels.WARN and type(value.message) == 'string' then
+      return nil, value.message, value.level
+    end
     return nil, tostring(value)
   end
   return value
@@ -48,8 +52,19 @@ local function current(name)
 end
 
 local function resolve(target)
+  local function found(entry, description)
+    if not entry then
+      error({
+        message = 'No saved workspace '
+          .. description
+          .. '. Use `:WorkspaceSave` to create one or `:WorkspaceSearch` to choose another.',
+        level = vim.log.levels.WARN,
+      }, 0)
+    end
+    return entry
+  end
   if type(target) == 'table' then
-    return assert(store.read(target.id), 'workspace not found')
+    return found(store.read(target.id), 'with ID ' .. notify.code(target.id))
   end
   if type(target) == 'string' and #target == 64 and target:match('^[a-f0-9]+$') then
     local entry = store.read(target)
@@ -58,12 +73,13 @@ local function resolve(target)
     end
   end
   local cwd, name = current(target)
-  return assert(store.read(store.id(cwd, name)), 'workspace not found for ' .. cwd)
+  local description = (name ~= '' and ('named ' .. notify.code(name) .. ' ') or '') .. 'for ' .. notify.code(cwd)
+  return found(store.read(store.id(cwd, name)), description)
 end
 
 ---Save the effective current directory, or a named workspace within it.
 ---@param opts? {name?:string}
----@return table? workspace, string? error
+---@return table? workspace, string? error, integer? level
 function M.save(opts)
   return operation(function()
     local cwd, name = current(opts and opts.name)
@@ -114,7 +130,7 @@ end
 function M.last()
   local items = M.list({ limit = 1 })
   if not items[1] then
-    return nil, 'no saved workspaces'
+    return nil, 'No saved workspaces. Use `:WorkspaceSave` to create one.', vim.log.levels.WARN
   end
   return M.restore(items[1])
 end
@@ -171,10 +187,6 @@ local function automatic_allowed(target_cwd)
   return true
 end
 
-local function report_error(err)
-  vim.notify('workspace-tools: ' .. err, vim.log.levels.ERROR)
-end
-
 function M.setup(opts)
   config.setup(opts)
   state.initialized = true
@@ -202,9 +214,9 @@ function M.setup(opts)
     end
     local id = store.id(target, '')
     if vim.fn.filereadable(store.path(id)) == 1 then
-      local _, err = M.restore({ id = id })
+      local _, err, level = M.restore({ id = id })
       if err then
-        report_error(err)
+        notify.send(err, level)
       end
     end
   end
@@ -219,7 +231,7 @@ function M.setup(opts)
       if config.options.auto_save and automatic_allowed() and #session.files() > 0 then
         local _, err = M.save()
         if err then
-          report_error(err)
+          notify.send(err)
         end
       end
     end,

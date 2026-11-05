@@ -42,6 +42,8 @@
 
 无名称的保存/恢复优先使用当前目录内已激活的 workspace；否则使用当前目录的默认 workspace。`save({ name = "" })` 可明确保存默认 workspace。删除当前 workspace 会暂停自动保存，防止退出时重建记录；使用 `WorkspaceStart` 恢复。
 
+通知标题为 `workspace-tools`，正文使用 Markdown 行内代码突出路径、名称和操作命令；需要通知组件支持 Markdown 渲染（如 notification-tools.nvim）。未找到保存记录时显示 warning。
+
 workspace 的目录取自当前窗口生效的 cwd，不自动向上查找 Git 根目录。可以先 `:cd` 到项目根目录再保存。原生会话会记录窗口/标签页的局部目录。已有的 `selection_tools.projects()` 仍负责发现项目和打开文件，本插件负责持久化的编辑现场。
 
 搜索优先使用可加载的 `selection-tools.nvim`。没有安装时使用内置浮窗：输入实时模糊搜索，`<C-n>`/`<Down>`、`<C-p>`/`<Up>` 选择，`<CR>` 恢复，`<Esc>`/`<C-c>` 取消。搜索和取消不会切换 workspace。丢失的项目目录仍显示在历史中，但不能恢复。
@@ -95,7 +97,7 @@ workspace.start()
 local status = workspace.status()
 ```
 
-`save`、`restore`、`last`、`delete` 返回 `entry, nil` 或 `nil, error`。`list` 返回元数据列表及无效文件的错误列表，不会因一个损坏记录隐藏其他历史。`entry` 包含 `id`、`name`、`cwd`、`files`、`created_at`、`updated_at`、`accessed_at` 和 `missing`。时间戳以秒为单位，包含小数。不要把显示名称当作文件路径。
+`save`、`restore`、`last`、`delete` 返回 `entry, nil` 或 `nil, error, level`。未找到保存记录时，`error` 提供操作提示，`level` 为 `vim.log.levels.WARN`；其他失败未提供 `level` 时按 ERROR 处理。命令和搜索恢复会使用对应通知级别。`list` 返回元数据列表及无效文件的错误列表，不会因一个损坏记录隐藏其他历史。`entry` 包含 `id`、`name`、`cwd`、`files`、`created_at`、`updated_at`、`accessed_at` 和 `missing`。时间戳以秒为单位，包含小数。不要把显示名称当作文件路径。
 
 钩子接收一份 workspace 元数据副本。返回 `false` 或抛出错误会中止操作；`post_*` 发生在对应操作已完成之后。可直接接入你现有的任务集成：
 

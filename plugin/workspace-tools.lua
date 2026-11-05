@@ -2,17 +2,18 @@ if vim.g.loaded_workspace_tools then
   return
 end
 vim.g.loaded_workspace_tools = true
+local notify = require('workspace_tools.notify')
 if vim.fn.has('nvim-0.11') == 0 then
-  vim.notify('workspace-tools.nvim requires Neovim 0.11+', vim.log.levels.ERROR)
+  notify.send('Requires Neovim 0.11+', vim.log.levels.ERROR)
   return
 end
 
 local function api()
   return require('workspace_tools')
 end
-local function notify_result(entry, err)
+local function notify_result(entry, err, level)
   if not entry then
-    vim.notify('workspace-tools: ' .. tostring(err), vim.log.levels.ERROR)
+    notify.send(err, level)
   end
 end
 local function complete(prefix)
@@ -56,7 +57,18 @@ vim.api.nvim_create_user_command('WorkspaceDelete', function(args)
     ok, entry = pcall(store.read, store.id(cwd, name))
   end
   if not ok or not entry then
-    notify_result(nil, ok and 'workspace not found' or tostring(entry))
+    if not ok then
+      notify_result(nil, tostring(entry))
+    else
+      notify_result(
+        nil,
+        ('No saved workspace %sfor %s. Use `:WorkspaceSearch` to browse saved workspaces.'):format(
+          name ~= '' and ('named ' .. notify.code(name) .. ' ') or '',
+          notify.code(cwd)
+        ),
+        vim.log.levels.WARN
+      )
+    end
     return
   end
   vim.ui.select({ 'Cancel', 'Delete' }, {

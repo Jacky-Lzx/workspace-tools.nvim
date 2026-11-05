@@ -28,6 +28,10 @@ current directory, falling back to the unnamed default. Explicitly passing
 name = '' to save() selects that default. Deleting the active/default workspace
 pauses automatic saving to avoid recreating it on exit.
 
+Notifications use the title workspace-tools and enable Markdown rendering.
+Paths, names and suggested commands use inline code when the notification
+provider supports Markdown. Missing saved records are warnings.
+
 API                                                    *workspace-tools-api*
 >
     local w = require('workspace_tools')
@@ -41,7 +45,10 @@ API                                                    *workspace-tools-api*
     w.start()
     local status = w.status()
 <
-save(), restore(), delete(), last() return metadata or nil, error.
+save(), restore(), delete(), last() return metadata or nil, error, level.
+Missing saved records return an actionable message and vim.log.levels.WARN.
+Other failures default to ERROR when no level is returned. Commands and picker
+restoration use this notification level.
 delete() does not confirm; the Ex command provides confirmation.
 list() returns metadata and a list of corrupt-record errors. A corrupt record
 does not hide valid history. Metadata includes id, name, cwd, files, created_at,

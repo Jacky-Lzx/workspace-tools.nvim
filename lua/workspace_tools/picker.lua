@@ -1,4 +1,5 @@
 local M = {}
+local notify = require('workspace_tools.notify')
 local active
 
 local function label(item)
@@ -11,9 +12,9 @@ end
 
 local function choose(item)
   if item then
-    local _, err = require('workspace_tools').restore(item)
+    local _, err, level = require('workspace_tools').restore(item)
     if err then
-      vim.notify('workspace-tools: ' .. err, vim.log.levels.ERROR)
+      notify.send(err, level)
     end
   end
 end
@@ -165,13 +166,13 @@ end
 function M.open(opts)
   local items, errors = require('workspace_tools').list()
   if #errors > 0 then
-    vim.notify(
-      ('workspace-tools: skipped %d invalid bundle(s); see :checkhealth workspace_tools'):format(#errors),
+    notify.send(
+      ('Skipped %d invalid bundle(s); see `:checkhealth workspace_tools`'):format(#errors),
       vim.log.levels.WARN
     )
   end
   if #items == 0 then
-    vim.notify('workspace-tools: no saved workspaces', vim.log.levels.INFO)
+    notify.send('No saved workspaces. Use `:WorkspaceSave` to create one.', vim.log.levels.INFO)
     return
   end
   local picker = opts.picker or require('workspace_tools.config').options.picker
