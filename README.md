@@ -173,3 +173,13 @@ Commands belong to the plugin; choose global entry keys and short aliases in
 your configuration. Registration reports same-name conflicts without replacing
 user commands. Reconfiguration refreshes only commands still owned by this
 plugin, and cleanup preserves subsequent user replacements.
+
+## Lifecycle and configuration
+
+`setup(opts)` resolves a fresh copy of defaults. Maps merge recursively; lists,
+including empty lists, replace defaults. Caller tables remain independent. Invalid
+configuration leaves the previous options and automatic handlers unchanged.
+`disable()` pauses automatic save/restore and invalidates queued startup work;
+`enable()` resumes with retained options. `dispose()` is repeatable, removes these
+handlers and resets configuration/session tracking without changing editor buffers
+or deleting saved workspaces. Explicit save/restore calls can initialize again.

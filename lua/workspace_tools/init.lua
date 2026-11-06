@@ -3,6 +3,7 @@ local config = require('workspace_tools.config')
 local store = require('workspace_tools.store')
 local session = require('workspace_tools.session')
 local notify = require('workspace_tools.notify')
+local generation = 0
 local state = { initialized = false, busy = false, blocked = false, stopped = false, active = nil, explicit = false }
 
 local function now()
@@ -189,6 +190,8 @@ end
 
 function M.setup(opts)
   config.setup(opts)
+  generation = generation + 1
+  local version = generation
   state.initialized = true
   state.argv = state.argv or vim.tbl_map(store.normalize, vim.fn.argv())
   state.stdin = state.stdin or vim.tbl_contains(vim.v.argv, '-')
@@ -200,6 +203,9 @@ function M.setup(opts)
     end,
   })
   local function startup()
+    if generation ~= version or not state.initialized then
+      return
+    end
     if state.startup_done then
       return
     end
@@ -237,6 +243,26 @@ function M.setup(opts)
     end,
   })
   return M
+end
+
+-- Pause automatic save/restore; existing editor buffers and saved sessions stay owned by the user.
+function M.disable()
+  generation = generation + 1
+  pcall(vim.api.nvim_del_augroup_by_name, 'WorkspaceTools')
+  state.initialized = false
+end
+
+function M.enable()
+  if not state.initialized then
+    M.setup(config.options)
+  end
+  return M
+end
+
+function M.dispose()
+  M.disable()
+  state = { initialized = false, busy = false, blocked = false, stopped = false, active = nil, explicit = false }
+  config.setup()
 end
 
 return M
