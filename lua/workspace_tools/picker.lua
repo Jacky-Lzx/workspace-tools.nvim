@@ -124,20 +124,20 @@ local function builtin(items, opts)
     end)
   end
   for _, key in ipairs({ '<CR>' }) do
-    vim.keymap.set({ 'i', 'n' }, key, confirm, { buffer = input, nowait = true })
+    vim.keymap.set({ 'i', 'n' }, key, confirm, { buffer = input, nowait = true, desc = 'Restore selected workspace' })
   end
   for _, key in ipairs({ '<Esc>', '<C-c>' }) do
-    vim.keymap.set({ 'i', 'n' }, key, close, { buffer = input, nowait = true })
+    vim.keymap.set({ 'i', 'n' }, key, close, { buffer = input, nowait = true, desc = 'Close workspace picker' })
   end
   for _, key in ipairs({ '<C-n>', '<Down>' }) do
     vim.keymap.set({ 'i', 'n' }, key, function()
       move(1)
-    end, { buffer = input })
+    end, { buffer = input, desc = 'Next workspace' })
   end
   for _, key in ipairs({ '<C-p>', '<Up>' }) do
     vim.keymap.set({ 'i', 'n' }, key, function()
       move(-1)
-    end, { buffer = input })
+    end, { buffer = input, desc = 'Previous workspace' })
   end
   vim.api.nvim_create_autocmd({ 'TextChangedI', 'TextChanged' }, { group = group, buffer = input, callback = render })
   vim.api.nvim_create_autocmd('VimResized', {
