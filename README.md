@@ -166,3 +166,10 @@ VIRTUAL_ENV / CONDA_PREFIX。显式选择优先于自动发现；失效选择及
 
 测试：`sh tests/run.sh` 包含 Python 环境发现、项目隔离、缓存权限与失效、选择取消、
 子进程环境以及解释器符号链接检查。
+
+## Command ownership
+
+Commands belong to the plugin; choose global entry keys and short aliases in
+your configuration. Registration reports same-name conflicts without replacing
+user commands. Reconfiguration refreshes only commands still owned by this
+plugin, and cleanup preserves subsequent user replacements.

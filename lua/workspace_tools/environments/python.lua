@@ -341,7 +341,7 @@ function M.disable()
   for job in pairs(jobs) do
     job.cancel()
   end
-  pcall(api.nvim_del_user_command, 'WorkspacePython')
+  pcall(require('workspace_tools.user_command').delete, 'WorkspacePython')
 end
 function M.setup(opts)
   opts = opts or {}
@@ -361,7 +361,7 @@ function M.setup(opts)
   end
   M.disable()
   options, records = vim.deepcopy(opts), {}
-  api.nvim_create_user_command('WorkspacePython', function(args)
+  require('workspace_tools.user_command').create('WorkspacePython', function(args)
     if args.bang or args.args ~= '' then
       local path
       if not args.bang then

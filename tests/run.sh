@@ -1,6 +1,7 @@
 #!/bin/sh
 set -eu
 cd "$(dirname "$0")/.."
+nvim --headless -u NONE -i NONE --noplugin -l tests/command_ownership.lua
 WORKSPACE_TEST_DIR=$(mktemp -d "${TMPDIR:-/tmp}/workspace-tools.XXXXXX")
 export WORKSPACE_TEST_DIR
 trap 'rm -rf "$WORKSPACE_TEST_DIR"' EXIT HUP INT TERM
