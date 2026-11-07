@@ -38,7 +38,7 @@
 | `:WorkspaceDelete[!] [name-or-id]` | 删除记录，默认确认；`!` 跳过确认 |
 | `:WorkspaceStop` | 暂停退出自动保存 |
 | `:WorkspaceStart` | 恢复退出自动保存 |
-| `:checkhealth workspace_tools` | 查看存储目录、无效记录和丢失的项目目录 |
+| `:checkhealth workspace_tools` | 检查无效记录与自动保存故障；详情见 `:WorkspaceInfo` |
 
 无名称的保存/恢复优先使用当前目录内已激活的 workspace；否则使用当前目录的默认 workspace。`save({ name = "" })` 可明确保存默认 workspace。删除当前 workspace 会暂停自动保存，防止退出时重建记录；使用 `WorkspaceStart` 恢复。
 
@@ -183,3 +183,10 @@ configuration leaves the previous options and automatic handlers unchanged.
 `enable()` resumes with retained options. `dispose()` is repeatable, removes these
 handlers and resets configuration/session tracking without changing editor buffers
 or deleting saved workspaces. Explicit save/restore calls can initialize again.
+
+## Health and inspection
+
+Health reports actionable failures and a compact result for applicable checks. Disabled,
+optional and not-yet-activated features do not warn solely because they are inactive.
+Inspection does not configure plugins, start services or install dependencies.
+Use `:WorkspaceInfo` for detailed configuration and runtime information.
