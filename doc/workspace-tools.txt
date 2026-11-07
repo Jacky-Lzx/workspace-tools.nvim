@@ -1,8 +1,50 @@
-*workspace-tools.txt*       Workspace save, restore and searchable history
+*workspace-tools.txt*	Save editing workspaces and search their restoration history.
+
+==============================================================================
+CONTENTS                                                     *workspace-tools*
+
+  Quick start         |workspace-tools-quickstart|
+  Commands            |workspace-tools-commands|
+  Options             |workspace-tools-options|
+  Lua API             |workspace-tools-api|
+  Lifecycle           |workspace-tools-lifecycle|
+  Troubleshooting     |workspace-tools-troubleshooting|
+
+==============================================================================
+QUICK START                                       *workspace-tools-quickstart*
+
+Requires Neovim 0.11+. No required plugin dependencies. An installed
+selection-tools.nvim enhances workspace search.
+
+>lua
+    require("workspace_tools").setup({})
+<
+
+The example above selects a small working setup. Full defaults, options and
+feature contracts are documented in this reference. Public installation and
+package-manager examples are in README.md.
+
+==============================================================================
+TROUBLESHOOTING                              *workspace-tools-troubleshooting*
+
+Check the minimum Neovim version and feature dependencies first. Run
+:checkhealth workspace_tools to inspect availability. Global mappings shown in
+the README are configuration examples unless explicitly documented as plugin
+defaults. Keep one owner for each overridden UI or mapping.
+
+==============================================================================
+LIFECYCLE                                          *workspace-tools-lifecycle*
+
+setup(opts) copies fresh defaults, merges dictionaries and replaces lists,
+including empty lists. Validation completes before live handlers change.
+disable() pauses automatic save/restore and invalidates queued startup work;
+enable() resumes with retained options. dispose() releases handlers and resets
+configuration/session tracking without deleting saved records or source buffers.
+Repeated disposal is safe; explicit save/restore can initialize again.
 
 workspace-tools.nvim requires Neovim 0.11+.
 
-SETUP                                                *workspace-tools-setup*
+SETUP                                                  *workspace-tools-setup*
 >
     require('workspace_tools').setup({
       auto_save = true,
@@ -13,7 +55,7 @@ SETUP                                                *workspace-tools-setup*
 No mappings are installed. Automatic operations require setup(). Commands can
 initialize the plugin lazily with defaults.
 
-COMMANDS                                          *workspace-tools-commands*
+COMMANDS                                            *workspace-tools-commands*
 
 :WorkspaceSave [name]        Save current cwd, optionally with a name.
 :WorkspaceRestore [name/id]  Restore active/default workspace or given target.
@@ -25,14 +67,14 @@ COMMANDS                                          *workspace-tools-commands*
 
 Names may contain spaces. Omitted names refer to the active workspace in the
 current directory, falling back to the unnamed default. Explicitly passing
-name = '' to save() selects that default. Deleting the active/default workspace
-pauses automatic saving to avoid recreating it on exit.
+name = '' to save() selects that default. Deleting the active/default
+workspace pauses automatic saving to avoid recreating it on exit.
 
 Notifications use the title workspace-tools and enable Markdown rendering.
 Paths, names and suggested commands use inline code when the notification
 provider supports Markdown. Missing saved records are warnings.
 
-API                                                    *workspace-tools-api*
+API                                                      *workspace-tools-api*
 >
     local w = require('workspace_tools')
     local entry, err = w.save({ name = 'Review' })
@@ -48,21 +90,21 @@ API                                                    *workspace-tools-api*
 save(), restore(), delete(), last() return metadata or nil, error, level.
 Missing saved records return an actionable message and vim.log.levels.WARN.
 Other failures default to ERROR when no level is returned. Commands and picker
-restoration use this notification level.
-delete() does not confirm; the Ex command provides confirmation.
-list() returns metadata and a list of corrupt-record errors. A corrupt record
-does not hide valid history. Metadata includes id, name, cwd, files, created_at,
-updated_at, accessed_at, missing and search. Timestamps are fractional seconds.
-status() returns a copy of lifecycle state, including active, stopped, blocked.
+restoration use this notification level. delete() does not confirm; the Ex
+command provides confirmation. list() returns metadata and a list of
+corrupt-record errors. A corrupt record does not hide valid history. Metadata
+includes id, name, cwd, files, created_at, updated_at, accessed_at, missing
+and search. Timestamps are fractional seconds. status() returns a copy of
+lifecycle state, including active, stopped, blocked.
 
-OPTIONS                                            *workspace-tools-options*
+OPTIONS                                              *workspace-tools-options*
 
 directory                  stdpath('state') .. '/workspace-tools'
 auto_save                  true: save on VimLeavePre
 auto_restore               false: opt-in startup restore for current cwd
 suppressed_dirs            { '~/', '~/Projects', '~/Downloads', '/' }
 close_filetypes_on_save    { 'checkhealth', 'tasktools', 'tasktoolsoutput' }
-sessionoptions             'buffers,curdir,folds,tabpages,winsize,winpos,localoptions'
+sessionoptions 'buffers,curdir,folds,tabpages,winsize,winpos,localoptions'
 picker                     'auto', 'builtin', 'selection' or select callback
 hooks                      lists of functions: pre_save, post_save,
                            pre_restore, post_restore, post_delete
@@ -81,33 +123,35 @@ Hooks receive a metadata copy; false or an error aborts the operation. Post
 hooks run after the operation has committed. Use a stable entry.id as the key
 for task definition sidecars. No personal config module is required.
 
-SEARCH                                              *workspace-tools-search*
+SEARCH                                                *workspace-tools-search*
 
 'auto' uses selection-tools.nvim when available and the builtin picker
 otherwise. The builtin picker provides live fuzzy matching, <C-n>/<Down> and
-<C-p>/<Up> navigation, <CR> restore, <Esc>/<C-c> cancel. A custom picker function
-uses the vim.ui.select(items, options, callback) contract. Query searches names
-and full paths. Missing project directories are shown but cannot be restored.
+<C-p>/<Up> navigation, <CR> restore, <Esc>/<C-c> cancel. A custom picker
+function uses the vim.ui.select(items, options, callback) contract. Query
+searches names and full paths. Missing project directories are shown but
+cannot be restored.
 
-STORAGE                                             *workspace-tools-storage*
+STORAGE                                              *workspace-tools-storage*
 
 Each workspace is a single private JSON bundle under directory, named by the
-SHA-256 of its canonical cwd and name. Session bytes are Base64-encoded because
-native mksession output can include non-UTF-8 byte quoting. Atomic rename
-replaces complete records; there is no shared history index to corrupt.
+SHA-256 of its canonical cwd and name. Session bytes are Base64-encoded
+because native mksession output can include non-UTF-8 byte quoting. Atomic
+rename replaces complete records; there is no shared history index to corrupt.
 
 Only the plugin store is read. Like any native Vim session, its contents can
 execute Vimscript. Existing auto-session records are not imported. Disable the
-old session plugin's lifecycle before configuring workspace-tools in its place.
+old session plugin's lifecycle before configuring workspace-tools in its
+place.
 
 BEHAVIOR                                            *workspace-tools-behavior*
 
-Native mksession stores file paths, tabs, windows, views and folds; it does not
-store unsaved file contents. Restore refuses any modified buffer. Save current
-layout explicitly before switching if needed. Excluded filetypes are closed
-before saving, matching the original auto-session configuration. Defaults omit
-terminals, jobs, plugin floats and task output. Task hooks restore definitions
-without starting processes when used with task-tools.nvim.
+Native mksession stores file paths, tabs, windows, views and folds; it does
+not store unsaved file contents. Restore refuses any modified buffer. Save
+current layout explicitly before switching if needed. Excluded filetypes are
+closed before saving, matching the original auto-session configuration.
+Defaults omit terminals, jobs, plugin floats and task output. Task hooks
+restore definitions without starting processes when used with task-tools.nvim.
 
 Native restoration is not transactional: if sourcing fails, partial window and
 buffer changes may remain. Automatic saving is then blocked. On success old
@@ -115,5 +159,83 @@ hidden regular file buffers absent from the target workspace are removed.
 Saved local options such as foldexpr still require their owning config/plugin.
 
 Use :checkhealth workspace_tools to inspect corrupt records and missing roots.
+
+==============================================================================
+PYTHON PROJECT ENVIRONMENTS                           *workspace-tools-python*
+
+This component works independently of workspace session saving:
+>lua
+    local python = require("workspace_tools.environments.python")
+    python.setup({})
+    local executable = python.current({ buf = 0 })
+    local environment = python.environment({ buf = 0 })
+<
+current() returns the selected interpreter or nil for the caller's system
+fallback. environment() returns child-process PATH/VIRTUAL_ENV/CONDA_PREFIX
+values without modifying the editor's global environment.
+
+:WorkspacePython [path] opens the picker or selects a virtualenv/interpreter.
+:WorkspacePython! clears the project override. :WorkspacePython system selects
+PATH's Python. A loadable selection-tools supplies the picker; vim.ui.select
+is the fallback. Python executable paths preserve virtualenv symlinks.
+
+Roots come from Python project markers or .git. Explicit selections are stored
+per normalized root in private JSON. Automatic discovery prefers project
+.venv, venv and env, then inherited VIRTUAL_ENV/CONDA_PREFIX. Invalid
+selections and corrupt caches fall back without preventing file opening.
+
+Discovery scans common virtualenv, Poetry, pyenv and Conda locations in
+batches, including ~/.conda/environments.txt. It skips dependencies inside
+found environments, executes no project scripts and installs nothing. Limits
+are reported in the picker title; paths can be entered manually.
+
+Options (all optional):
+  search_paths: string[]   Additional environment roots.
+  directory: string       stdpath('state') .. '/workspace-tools/python'.
+  search_depth: integer   Maximum depth, default 3.
+  max_directories: integer  Maximum scanned directories, default 3000.
+
+python.set(path, {root=...}) selects one project; set(nil, ...) clears it.
+discover(opts, callback) returns a cancel() handle. disable() cancels pending
+discovery. User WorkspacePythonChanged includes root, python and environment
+in ev.data; LSP, tasks and DAP consume this public interface. Other projects
+retain their selections. Poetry/Conda installation, shell activation scripts
+and PEP 723 are outside this component.
+
+==============================================================================
+SESSION GUARANTEES                                *workspace-tools-guarantees*
+
+Workspace paths use the current window's effective cwd, not an inferred Git
+root. Use :cd first when desired. Native sessions retain local window/tab cwd.
+Search and cancellation do not switch workspaces. Missing directories stay in
+history but cannot be restored. Session restore suppresses routine file-read
+notices so narrow terminals do not stop at a hit-enter prompt; errors are
+shown.
+
+Save or discard modified buffers before restoring. Success removes the
+previous workspace's hidden ordinary file buffers. Failure pauses automatic
+saving to protect existing records; manual save or successful restore clears
+the block. Native session restoration is not transactional: windows opened
+before an error can remain. Saved sessions do not contain unsaved text or
+restart processes.
+
+Automatic operations require setup. Saving skips headless/stdin/explicit-file
+starts, empty ordinary-file sets and exactly matched suppressed directories. A
+single directory argument permits automatic operations. Manual save/restore
+allows later exit saving. auto_restore restores only the current directory's
+default workspace, including setup after VimEnter, and does not watch
+DirChanged.
+
+Hooks receive copied metadata. Returning false or throwing aborts the
+operation; post_* hooks run after the action. Use stable entry.id with your
+task persistence adapter; workspace-tools does not import configuration
+modules or start tasks. list() returns entries plus corrupt-record errors
+without hiding valid history.
+
+Each SHA-256-named JSON record stores metadata and a Base64 native session.
+Private temporary writes are atomically renamed. Session scripts can execute
+Vimscript; restore only records in this plugin's store. Existing auto-session
+records are not migrated. Disable the old plugin's automatic save hooks when
+switching to this owner.
 
 vim:tw=78:ts=8:noet:ft=help:norl:
