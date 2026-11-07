@@ -1,0 +1,167 @@
+{
+  "version": 1,
+  "default": [
+    "unit",
+    "ui"
+  ],
+  "defaults": {},
+  "cases": [
+    {
+      "name": "runner-contracts",
+      "suite": "unit",
+      "command": [
+        "{python}",
+        "tests/runner_checks.py"
+      ],
+      "files": [
+        "tests/runner_checks.py"
+      ],
+      "timeout": 120
+    },
+    {
+      "name": "command_ownership",
+      "suite": "unit",
+      "command": [
+        "{nvim}",
+        "--headless",
+        "-u",
+        "NONE",
+        "-i",
+        "NONE",
+        "--noplugin",
+        "-l",
+        "tests/command_ownership.lua"
+      ],
+      "files": [
+        "tests/command_ownership.lua"
+      ],
+      "timeout": 90
+    },
+    {
+      "name": "setup_contract",
+      "suite": "unit",
+      "command": [
+        "{nvim}",
+        "--headless",
+        "-u",
+        "NONE",
+        "-i",
+        "NONE",
+        "-l",
+        "tests/setup_contract.lua"
+      ],
+      "files": [
+        "tests/setup_contract.lua"
+      ],
+      "env": {
+        "WORKSPACE_TEST_DIR": "{tmp}"
+      },
+      "timeout": 90
+    },
+    {
+      "name": "python",
+      "suite": "unit",
+      "command": [
+        "{nvim}",
+        "--headless",
+        "-u",
+        "NONE",
+        "-i",
+        "NONE",
+        "-l",
+        "tests/python.lua"
+      ],
+      "files": [
+        "tests/python.lua"
+      ],
+      "env": {
+        "WORKSPACE_TEST_DIR": "{tmp}"
+      },
+      "timeout": 90
+    },
+    {
+      "name": "core",
+      "suite": "unit",
+      "command": [
+        "{nvim}",
+        "--headless",
+        "-u",
+        "NONE",
+        "-i",
+        "NONE",
+        "-l",
+        "tests/core.lua"
+      ],
+      "files": [
+        "tests/core.lua"
+      ],
+      "env": {
+        "WORKSPACE_TEST_DIR": "{tmp}"
+      },
+      "timeout": 90
+    },
+    {
+      "name": "session_bytes",
+      "suite": "unit",
+      "command": [
+        "{nvim}",
+        "--headless",
+        "-u",
+        "NONE",
+        "-i",
+        "NONE",
+        "-l",
+        "tests/session_bytes.lua"
+      ],
+      "files": [
+        "tests/session_bytes.lua"
+      ],
+      "env": {
+        "WORKSPACE_TEST_DIR": "{tmp}"
+      },
+      "timeout": 90
+    },
+    {
+      "name": "tasks",
+      "suite": "unit",
+      "command": [
+        "{nvim}",
+        "--headless",
+        "-u",
+        "NONE",
+        "-i",
+        "NONE",
+        "-l",
+        "tests/tasks.lua"
+      ],
+      "files": [
+        "tests/tasks.lua"
+      ],
+      "env": {
+        "WORKSPACE_TEST_DIR": "{tmp}"
+      },
+      "timeout": 90
+    },
+    {
+      "name": "tui",
+      "suite": "ui",
+      "command": [
+        "{python}",
+        "tests/tui.py"
+      ],
+      "files": [
+        "tests/tui.py"
+      ],
+      "env": {
+        "WORKSPACE_TEST_DIR": "{tmp}"
+      },
+      "timeout": 120
+    }
+  ],
+  "support": {
+    "tests/lifecycle.lua": "Loaded by tests/tui.py",
+    "tests/tui.lua": "Loaded by tests/tui.py",
+    "tests/run.sh": "Stable shell entry point for tests/run.py"
+  },
+  "manual": {}
+}
