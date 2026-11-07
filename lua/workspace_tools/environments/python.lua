@@ -93,30 +93,41 @@ local function system_python()
     end
   end
 end
-function M.current(opts)
+local function resolve(opts)
   local root = M.root(opts)
   local selected = load(root)
   if selected == 'system' then
-    return system_python()
+    return system_python(), 'system', root
   end
   if selected and interpreter(selected) then
-    return selected
+    return selected, 'selection', root
   end
   for _, name in ipairs({ '.venv', 'venv', 'env' }) do
     local python = interpreter(root .. '/' .. name)
     if python then
-      return python
+      return python, 'project:' .. name, root
     end
   end
   for _, name in ipairs({ 'VIRTUAL_ENV', 'CONDA_PREFIX' }) do
     if vim.env[name] and vim.env[name] ~= '' then
       local python = interpreter(vim.env[name])
       if python then
-        return python
+        return python, 'env:' .. name, root
       end
     end
   end
-  return nil
+  return nil, 'none', root
+end
+function M.current(opts)
+  local python = resolve(opts)
+  return python
+end
+-- Read the same selection as current(), without discovery, subprocesses or writes.
+function M.info(opts)
+  local python, source, root = resolve(opts)
+  local info = python and describe(python) or {}
+  info.root, info.source = root, source
+  return info
 end
 function M.environment(opts)
   local python = M.current(opts)

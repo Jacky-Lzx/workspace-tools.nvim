@@ -173,6 +173,10 @@ This component works independently of workspace session saving:
 current() returns the selected interpreter or nil for the caller's system
 fallback. environment() returns child-process PATH/VIRTUAL_ENV/CONDA_PREFIX
 values without modifying the editor's global environment.
+info(opts) returns a fresh snapshot with root, python, source and interpreter
+metadata. source is selection, system, project:<directory>, env:<variable> or
+none. Inspection uses the same resolution as current(), without running discovery,
+subprocesses or creating the selection store.
 
 :WorkspacePython [path] opens the picker or selects a virtualenv/interpreter.
 :WorkspacePython! clears the project override. :WorkspacePython system selects

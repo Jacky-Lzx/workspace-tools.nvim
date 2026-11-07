@@ -41,6 +41,12 @@ end
 local one, two = buffer(a .. '/src/main.py'), buffer(b .. '/src/main.py')
 assert(P.root({ buf = one }) == a and P.root({ buf = two }) == b)
 assert(P.current({ buf = one }) == auto and P.current({ buf = two }) == other)
+local snapshot = P.info({ buf = one })
+assert(snapshot.root == a and snapshot.python == auto and snapshot.source == 'project:.venv')
+assert(vim.fn.isdirectory(settings.directory) == 0, 'inspection must not create the selection store')
+assert(not package.loaded.selection_tools, 'inspection must not load a picker')
+snapshot.python = 'changed'
+assert(P.info({ buf = one }).python == auto, 'inspection shares mutable state')
 local inherited = vim.env.VIRTUAL_ENV
 local events = {}
 local event = api.nvim_create_autocmd('User', {
@@ -51,6 +57,7 @@ local event = api.nvim_create_autocmd('User', {
 })
 assert(P.set(selected, { buf = one }) == selected)
 assert(P.current({ buf = two }) == other)
+assert(P.info({ buf = one }).source == 'selection')
 assert(events[1].root == a and events[1].python == selected)
 assert(vim.env.VIRTUAL_ENV == inherited, 'selection must not mutate process-wide environment')
 assert(P.environment({ buf = one }).VIRTUAL_ENV == vim.fs.dirname(vim.fs.dirname(selected)))
@@ -122,6 +129,17 @@ assert(uv.fs_symlink(actual, directory .. '/envs/symlink/bin/python'))
 write(directory .. '/envs/symlink/pyvenv.cfg')
 P.set(directory .. '/envs/symlink', { buf = two })
 assert(P.current({ buf = two }) == directory .. '/envs/symlink/bin/python')
+local bare = directory .. '/bare'
+vim.fn.mkdir(bare, 'p')
+local virtual_env, conda_prefix = vim.env.VIRTUAL_ENV, vim.env.CONDA_PREFIX
+vim.env.VIRTUAL_ENV, vim.env.CONDA_PREFIX = nil, nil
+assert(P.info({ root = bare }).source == 'none' and P.info({ root = bare }).python == nil)
+vim.env.VIRTUAL_ENV = b .. '/.venv'
+assert(P.info({ root = bare }).source == 'env:VIRTUAL_ENV' and P.info({ root = bare }).python == other)
+vim.env.VIRTUAL_ENV = nil
+P.set('system', { root = bare })
+assert(P.info({ root = bare }).source == 'system' and P.info({ root = bare }).python == actual)
+vim.env.VIRTUAL_ENV, vim.env.CONDA_PREFIX = virtual_env, conda_prefix
 P.disable()
 api.nvim_del_autocmd(event)
 assert(vim.fn.exists(':WorkspacePython') == 0)
