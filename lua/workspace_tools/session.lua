@@ -80,7 +80,7 @@ function M.restore(entry)
     store.write_file(temp, entry.session)
     vim.o.hidden = true
     vim.api.nvim_set_current_dir(entry.cwd)
-    vim.cmd('source ' .. vim.fn.fnameescape(temp))
+    vim.cmd('silent source ' .. vim.fn.fnameescape(temp))
   end)
   vim.o.hidden = hidden
   -- The bundle, rather than a permanent executable .vim file, owns the session.

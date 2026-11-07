@@ -192,3 +192,5 @@ Inspection does not configure plugins, start services or install dependencies.
 Use `:WorkspaceInfo` for detailed configuration and runtime information.
 
 [Test workflow](tests/README.md): registered suites, filtering, required fixtures and retained failure evidence.
+
+恢复会话会抑制普通文件读取提示，避免窄终端停在“按回车继续”；恢复错误仍会正常报告。
