@@ -188,7 +188,30 @@ function M.open(opts)
       if opts.query and opts.query ~= '' then
         items = vim.fn.matchfuzzy(items, opts.query, { key = 'search' })
       end
-      return selection.select(items, { prompt = 'Workspaces', format_item = label }, choose)
+      local C = require('selection_tools.components')
+      return selection.select(items, {
+        prompt = 'Workspaces',
+        format_item = label,
+        components = {
+          C.text({
+            get = function(item)
+              return item.name ~= '' and item.name or vim.fs.basename(item.cwd)
+            end,
+          }),
+          C.path({ field = 'cwd', path_format = ':~' }),
+          C.text({
+            get = function(item)
+              return ('%d files'):format(#item.files)
+            end,
+          }),
+          C.time({ field = 'updated_at', format = '%Y-%m-%d %H:%M', searchable = true }),
+          C.text({
+            get = function(item)
+              return item.missing and '[missing]' or nil
+            end,
+          }),
+        },
+      }, choose)
     end
     assert(picker ~= 'selection', 'selection-tools.nvim is unavailable')
   end

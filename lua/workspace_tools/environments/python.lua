@@ -311,10 +311,21 @@ function M.select(opts)
       { name = 'Enter Python or environment path…', manual = true },
     }
     vim.list_extend(choices, items)
-    local picker = opts.picker or config().picker
+    local picker, components = opts.picker or config().picker
     if not picker then
       local ok, selection = pcall(require, 'selection_tools')
       picker = ok and selection.select or vim.ui.select
+      if ok then
+        local C = require('selection_tools.components')
+        components = {
+          C.text({
+            get = function(item)
+              return item.python and item.kind or item.name
+            end,
+          }),
+          C.path({ field = 'python', path_format = false }),
+        }
+      end
     end
     local function choose(path)
       local ok, result = pcall(M.set, path, { root = root })
@@ -329,6 +340,7 @@ function M.select(opts)
     end
     picker(choices, {
       prompt = 'Python environment' .. (info.truncated and ' (search limit reached)' or ''),
+      components = components,
       format_item = function(item)
         return item.python and (item.kind .. ' · ' .. item.python) or item.name
       end,

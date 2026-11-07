@@ -1,5 +1,7 @@
 # workspace-tools.nvim
 
+Workspace and Python environment pickers use selection-tools path/time components. Shared `component_defaults` apply; displayed dates remain searchable. Custom picker functions retain the `vim.ui.select` contract.
+
 Save editing workspaces and search their restoration history.
 
 ## Features

@@ -170,6 +170,29 @@
         "WORKSPACE_TEST_DIR": "{tmp}"
       },
       "timeout": 120
+    },
+    {
+      "name": "picker_components",
+      "suite": "integration",
+      "command": [
+        "{nvim}",
+        "--headless",
+        "-u",
+        "NONE",
+        "-i",
+        "NONE",
+        "--noplugin",
+        "-n",
+        "-l",
+        "tests/picker_components.lua"
+      ],
+      "files": [
+        "tests/picker_components.lua"
+      ],
+      "requires": [
+        "path:{root}/../selection-tools.nvim/lua"
+      ],
+      "timeout": 90
     }
   ],
   "support": {
@@ -177,5 +200,12 @@
     "tests/tui.lua": "Loaded by tests/tui.py",
     "tests/run.sh": "Stable shell entry point for tests/run.py"
   },
-  "manual": {}
+  "manual": {},
+  "fixtures": {
+    "selection-tools.nvim": {
+      "repository": "Jacky-Lzx/selection-tools.nvim",
+      "revision": "6685844c034e1cab37de786ebbc1d0e673a87196",
+      "path": "{root}/../selection-tools.nvim"
+    }
+  }
 }
