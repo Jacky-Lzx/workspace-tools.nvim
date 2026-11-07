@@ -7,6 +7,6 @@ require('workspace_tools.user_command').create('WorkspaceInfo', function()
       records = { require('workspace_tools.store').list() },
     }),
     vim.log.levels.INFO,
-    { title = 'workspace-tools.nvim' }
+    { title = 'workspace-tools.nvim', filetype = 'lua' }
   )
 end, { desc = 'Inspect configuration and current runtime state' })
