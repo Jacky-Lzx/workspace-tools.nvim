@@ -11,5 +11,6 @@ export XDG_CACHE_HOME="$WORKSPACE_TEST_DIR/cache"
 "${NVIM_BIN:-nvim}" --headless -u NONE -i NONE -l tests/setup_contract.lua
 "${NVIM_BIN:-nvim}" --headless -u NONE -i NONE -l tests/python.lua
 "${NVIM_BIN:-nvim}" --headless -u NONE -i NONE -l tests/core.lua
+"${NVIM_BIN:-nvim}" --headless -u NONE -i NONE -l tests/session_bytes.lua
 "${NVIM_BIN:-nvim}" --headless -u NONE -i NONE -l tests/tasks.lua
 python3 tests/tui.py

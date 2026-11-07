@@ -46,7 +46,14 @@ function M.capture()
     -- mksession otherwise creates its output with the process umask.
     store.write_file(temp, '')
     vim.cmd('silent mksession! ' .. vim.fn.fnameescape(temp))
-    return table.concat(vim.fn.readfile(temp), '\n') .. '\n'
+    -- readfile() strips mapping <CR> bytes at line endings and translates NULs.
+    -- Keep the native script byte-for-byte, including escaped control characters.
+    local file = assert(io.open(temp, 'rb'))
+    local data, read_err = file:read('*a')
+    local closed, close_err = file:close()
+    assert(data, read_err)
+    assert(closed, close_err)
+    return data
   end)
   vim.o.sessionoptions, vim.v.this_session = sessionoptions, current_session
   vim.uv.fs_unlink(temp)
